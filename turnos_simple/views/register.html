@@ -1,0 +1,17 @@
+$def with (error, datos)
+<h2>Registrar paciente</h2>
+$if error:
+    <p><b>Error: $error</b></p>
+
+<form method="post">
+    <p>Nombre:<br><input name="name" value="$datos.name"></p>
+    <p>Edad:<br><input name="age" value="$datos.age"></p>
+    <p>Motivo de consulta:<br><input name="reason" value="$datos.reason"></p>
+    <p>Nivel de urgencia:<br>
+    <select name="urgency">
+    $for nivel in sorted(URGENCIAS):
+        <option value="$nivel" $:('selected' if str(nivel) == datos.urgency else '')>$URGENCIAS[nivel][0] ($URGENCIAS[nivel][1], $URGENCIAS[nivel][2] min)</option>
+    </select></p>
+    <p>Tiempo estimado en minutos (opcional):<br><input name="estimated" value="$datos.estimated"></p>
+    <button>Registrar</button>
+</form>

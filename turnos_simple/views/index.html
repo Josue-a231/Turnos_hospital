@@ -1,0 +1,70 @@
+$def with (mensaje, prioritaria, general, medicos)
+$if mensaje:
+    <p><b>Error: $mensaje</b></p>
+
+<h2>Medicos</h2>
+<table border="1">
+<tr><th>Medico</th><th>Especialidad</th><th>Atendidos</th><th>Estado</th><th>Accion</th></tr>
+$for m in medicos:
+    <tr>
+        <td>$m.name</td>
+        <td>$m.specialty</td>
+        <td>$m.atendidos</td>
+        $if m.actual:
+            <td>Atendiendo a $m.actual.turn ($m.actual.name)</td>
+            <td>
+                <form method="post" action="/finalizar/$m.id">
+                    <button>Finalizar consulta</button>
+                </form>
+            </td>
+        $else:
+            <td>Libre</td>
+            <td>
+                <form method="post" action="/llamar/$m.id">
+                    <button>Llamar siguiente</button>
+                </form>
+            </td>
+    </tr>
+</table>
+
+<h2>Fila prioritaria ($len(prioritaria))</h2>
+$if len(prioritaria) == 0:
+    <p>Sin pacientes en espera.</p>
+$else:
+    <table border="1">
+    <tr><th>#</th><th>Turno</th><th>Paciente</th><th>Espera aprox.</th><th>Accion</th></tr>
+    $for p in prioritaria:
+        <tr>
+            <td>$p.posicion</td>
+            <td>$p.turn</td>
+            <td>$p.name</td>
+            <td>$p.espera min</td>
+            <td>
+                <form method="post" action="/cancelar/$p.id">
+                    <button>Cancelar</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+
+<h2>Fila general ($len(general))</h2>
+$if len(general) == 0:
+    <p>Sin pacientes en espera.</p>
+$else:
+    <table border="1">
+    <tr><th>#</th><th>Turno</th><th>Paciente</th><th>Espera aprox.</th><th>Accion</th></tr>
+    $for p in general:
+        <tr>
+            <td>$p.posicion</td>
+            <td>$p.turn</td>
+            <td>$p.name</td>
+            <td>$p.espera min</td>
+            <td>
+                <form method="post" action="/cancelar/$p.id">
+                    <button>Cancelar</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+
+<p><a href="/">Actualizar</a></p>

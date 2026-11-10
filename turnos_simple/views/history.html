@@ -1,0 +1,16 @@
+$def with (pacientes)
+<h2>Historial</h2>
+<table border="1">
+<tr><th>Turno</th><th>Paciente</th><th>Edad</th><th>Motivo</th><th>Urgencia</th><th>Estado</th><th>Medico</th><th>Llegada</th></tr>
+$for p in pacientes:
+    <tr>
+        <td>$p.turn</td>
+        <td>$p.name</td>
+        <td>$p.age</td>
+        <td>$p.reason</td>
+        <td>$URGENCIAS[p.urgency][0]</td>
+        <td>$ESTADOS[p.status]</td>
+        <td>$(p.doctor_name or "-")</td>
+        <td>$p.created_at.replace("T", " ")</td>
+    </tr>
+</table>

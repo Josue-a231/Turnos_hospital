@@ -1,0 +1,13 @@
+$def with (p, posicion)
+<h2>Turno $p.turn</h2>
+<p>Paciente: $p.name</p>
+<p>Edad: $p.age</p>
+<p>Motivo: $p.reason</p>
+<p>Urgencia: $URGENCIAS[p.urgency][0] (fila $p.attention_type)</p>
+<p>Estado: <b>$ESTADOS[p.status]</b></p>
+$if p.status == "espera" and posicion:
+    <p>Posicion en la fila: $posicion.posicion</p>
+    <p>Espera aproximada: $posicion.espera min</p>
+$if p.doctor_name:
+    <p>Medico: $p.doctor_name</p>
+<p><a href="/">Ir al panel</a></p>

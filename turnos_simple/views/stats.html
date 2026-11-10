@@ -1,0 +1,18 @@
+$def with (s)
+<h2>Estadisticas</h2>
+<p>Espera promedio: $s.espera_prom min</p>
+<p>Consulta promedio: $s.consulta_prom min</p>
+
+<h3>Pacientes por estado</h3>
+<table border="1">
+<tr><th>Estado</th><th>Cantidad</th></tr>
+$for e in s.por_estado:
+    <tr><td>$ESTADOS[e.status]</td><td>$e.n</td></tr>
+</table>
+
+<h3>Pacientes por nivel de urgencia</h3>
+<table border="1">
+<tr><th>Nivel</th><th>Cantidad</th></tr>
+$for n in s.por_nivel:
+    <tr><td>$URGENCIAS[n.urgency][0]</td><td>$n.n</td></tr>
+</table>
