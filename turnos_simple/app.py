@@ -1,15 +1,10 @@
-"""Sistema de turnos para consulta medica (web.py + SQLite).
-Uso:  python app.py      -> abre http://localhost:8080
-Partes (una por integrante): 1 Config y BD | 2 Pacientes | 3 Filas y medicos | 4 Rutas
-Las vistas (HTML) estan en la carpeta views/
-"""
 import os
 import sqlite3
 from datetime import datetime
 
 import web
 
-# ===== PARTE 1: CONFIGURACION Y BASE DE DATOS =====
+# ===== PARTE 1: CONFIGURACION Y BASE DE DATOS 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "hospital.db")
 
@@ -59,10 +54,8 @@ def crear_tablas():
     conn.commit()
     conn.close()
 
-
 def ahora():
     return datetime.now().isoformat(timespec="seconds")
-
 
 # ===== PARTE 2: PACIENTES =====
 def registrar_paciente(nombre, edad, motivo, urgencia, estimado):
@@ -79,7 +72,6 @@ def registrar_paciente(nombre, edad, motivo, urgencia, estimado):
         if not estimado.isdigit() or not 1 <= int(estimado) <= 240:
             return None, "El tiempo estimado debe ser entre 1 y 240 minutos."
         minutos = int(estimado)
-
     # el turno es P-001, P-002... (fila prioritaria) o G-001, G-002... (fila general)
     cantidad = consultar("SELECT COUNT(*) AS n FROM patients WHERE attention_type=?", (fila,))[0].n
     turno = "%s-%03d" % (fila[0].upper(), cantidad + 1)
@@ -88,23 +80,18 @@ def registrar_paciente(nombre, edad, motivo, urgencia, estimado):
                    (turno, nombre, int(edad), motivo, fila, int(urgencia), minutos, ahora()))
     return cur.lastrowid, None
 
-
 def obtener_paciente(patient_id):
     filas = consultar("SELECT p.*, d.name AS doctor_name FROM patients p "
                       "LEFT JOIN doctors d ON d.id = p.doctor_id WHERE p.id=?", (patient_id,))
     return filas[0] if filas else None
-
-
 def obtener_historial():
     return consultar("SELECT p.*, d.name AS doctor_name FROM patients p "
                      "LEFT JOIN doctors d ON d.id = p.doctor_id ORDER BY p.id DESC LIMIT 100")
-
 
 def cancelar_turno(patient_id):  # devuelve un mensaje de error, o None si salio bien
     cur = ejecutar("UPDATE patients SET status='cancelado', finished_at=? WHERE id=? AND status='espera'",
                    (ahora(), patient_id))
     return None if cur.rowcount else "No se pudo cancelar el turno."
-
 
 # ===== PARTE 3: FILAS, MEDICOS Y ESTADISTICAS =====
 def obtener_filas():
@@ -125,8 +112,6 @@ def obtener_filas():
             p.espera = round(acumulado / max(1, len(medicos)))
             acumulado += p.estimated_minutes
     return filas[0], filas[1], medicos
-
-
 def llamar_siguiente(doctor_id):
     """Primero la fila prioritaria; si esta vacia, la general. Devuelve error o None."""
     ocupado = consultar("SELECT id FROM patients WHERE doctor_id=? AND status='en_consulta'", (doctor_id,))
@@ -139,12 +124,10 @@ def llamar_siguiente(doctor_id):
     ejecutar("UPDATE patients SET status='en_consulta', doctor_id=?, called_at=? WHERE id=?",
              (doctor_id, ahora(), siguiente[0].id))
 
-
 def finalizar_consulta(doctor_id):
     cur = ejecutar("UPDATE patients SET status='atendido', finished_at=? "
                    "WHERE doctor_id=? AND status='en_consulta'", (ahora(), doctor_id))
     return None if cur.rowcount else "El medico no tiene una consulta en curso."
-
 
 def estadisticas():
     s = web.storage()
@@ -157,17 +140,14 @@ def estadisticas():
     s.espera_prom, s.consulta_prom = round(t.espera or 0, 1), round(t.consulta or 0, 1)
     return s
 
-
 # ===== PARTE 4: RUTAS (CONTROLADORES) Y ARRANQUE =====
 urls = ("/", "Panel", "/register", "Registro", "/ticket/(\\d+)", "Ticket", "/history", "Historial",
         "/stats", "Estadisticas", "/(llamar|finalizar|cancelar)/(\\d+)", "Accion")
-
 
 class Panel:
     def GET(self):
         prioritaria, general, medicos = obtener_filas()
         return render.index(web.input(msg="").msg, prioritaria, general, medicos)  # msg = error opcional
-
 
 class Registro:
     def GET(self):
@@ -179,8 +159,6 @@ class Registro:
         if error:
             return render.register(error, d)
         raise web.seeother("/ticket/%d" % nuevo_id)
-
-
 class Ticket:
     def GET(self, patient_id):
         paciente = obtener_paciente(int(patient_id))
@@ -189,24 +167,18 @@ class Ticket:
         prioritaria, general, _ = obtener_filas()  # si sigue esperando, buscamos su posicion
         posicion = ([p for p in prioritaria + general if p.id == paciente.id] or [None])[0]
         return render.ticket(paciente, posicion)
-
-
 class Historial:
     def GET(self):
         return render.history(obtener_historial())
 
-
 class Estadisticas:
     def GET(self):
         return render.stats(estadisticas())
-
-
 class Accion:  # los botones mandan POST a /llamar/1, /finalizar/1 o /cancelar/5
     def POST(self, accion, id):
         acciones = {"llamar": llamar_siguiente, "finalizar": finalizar_consulta, "cancelar": cancelar_turno}
         error = acciones[accion](int(id))
         raise web.seeother("/?msg=" + web.urlquote(error) if error else "/")
-
 
 crear_tablas()
 app = web.application(urls, globals())
